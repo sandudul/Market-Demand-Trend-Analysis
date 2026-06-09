@@ -166,7 +166,12 @@ def explode_skills(df: pd.DataFrame, skill_col: str = "job_skills") -> pd.DataFr
     df["skill_list"] = parse_skills(df[skill_col])
     exploded = df.explode("skill_list").rename(columns={"skill_list": "skill"})
     exploded["skill"] = exploded["skill"].str.strip()
-    return exploded[exploded["skill"].notna() & (exploded["skill"] != "")]
+    exploded = exploded[exploded["skill"].notna() & (exploded["skill"] != "")]
+    if not exploded.empty:
+        casing_map = exploded["skill"].groupby(exploded["skill"].str.lower()).agg(lambda x: x.value_counts().idxmax())
+        exploded["skill"] = exploded["skill"].str.lower().map(casing_map)
+    return exploded[["job_link", "skill"]]
+
 
 
 # ─── Role Categorisation ──────────────────────────────────────────────────────
